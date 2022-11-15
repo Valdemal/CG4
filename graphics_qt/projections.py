@@ -39,10 +39,6 @@ class Projection(ABC):
     def axle(self) -> Axle:
         return self._axle
 
-    @property
-    def transformation(self) -> Transformation:
-        return self.__transformation
-
 
 class OrthographicProjection(Projection):
 
@@ -50,12 +46,7 @@ class OrthographicProjection(Projection):
         super().__init__(projections.orthographic(axle), axle, transformation)
 
     def __call__(self, point: Point3D) -> QPointF:
-
-        matrix = self._projection_matrix
-        if self.transformation is not None:
-            matrix *= self.transformation.to_affine_matrix()
-
-        transformed_point = point.apply_modification(matrix)
+        transformed_point = point.apply_modification(self._projection_matrix)
 
         match self.axle:
             case 'x':
@@ -75,7 +66,6 @@ class CentralProjection(OrthographicProjection):
                  distance_from_screen: float,
                  transformation: Optional[Transformation] = None,
                  ):
-
         super().__init__(ax, transformation)
         self.set_distance(distance_from_screen)
 

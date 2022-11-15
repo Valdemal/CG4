@@ -5,11 +5,10 @@ from PyQt5.QtWidgets import (
     QVBoxLayout, )
 
 from figures import Spruce
-from graphics import affine
-from graphics.types import Point3D
-from graphics_qt.images import FigureFrameworkImage, SpruceImage
-from graphics_qt.projections import CentralProjection
 from graphics.transformation import Transformation
+from graphics.types import Point3D
+from graphics_qt.images import SpruceImage
+from graphics_qt.projections import CentralProjection
 from widgets.views import FigureImageView
 
 

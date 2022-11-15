@@ -11,7 +11,6 @@ from PyQt5.QtGui import QPainter, QPen, QBrush, QPainterPath
 from figures import Spruce
 from graphics.figure import AbstractFigure, Polygon
 from graphics.transformation import Transformation
-from graphics.types import Axle
 from graphics_qt.projections import Projection
 
 
@@ -46,8 +45,9 @@ class AbstractFigureImage(ABC):
     Классы-потомки должны реализовать логику отрисовки фигуры.
     """
 
-    def __init__(self, projection: Projection):
+    def __init__(self, projection: Projection, transformation: Transformation):
         self.__projection = projection
+        self.__transformation = transformation
 
     @abstractmethod
     def draw(self, painter: QPainter):
@@ -63,17 +63,8 @@ class AbstractFigureImage(ABC):
         return self.__projection
 
     @property
-    @abstractmethod
     def transformation(self) -> Transformation:
-        pass
-
-    @staticmethod
-    def _draw_polygons(painter: QPainter, polygons: List[Polygon],
-                       projection: Projection, brush: Optional[QBrush] = None):
-        for polygon in polygons:
-            connect_points([
-                projection(point) for point in polygon.points
-            ], painter, brush)
+        return self.__transformation
 
 
 class FigureFrameworkImage(AbstractFigureImage):
@@ -81,15 +72,12 @@ class FigureFrameworkImage(AbstractFigureImage):
     Образ, выполняющий отрисовку каркаса фигуры.
     """
 
-    @property
-    def transformation(self) -> Transformation:
-        return self.projection.transformation
-
     def __init__(self,
                  figure: AbstractFigure,
                  projection: Projection,
+                 transformation: Transformation,
                  pen: Optional[QPen] = None):
-        super().__init__(projection)
+        super().__init__(projection, transformation)
 
         self.__figure = figure
         self.__pen = pen
@@ -106,55 +94,66 @@ class FigureFrameworkImage(AbstractFigureImage):
             ], painter)
 
 
-class PolygonImage:
-    # Возможно применение легковеса
-
-    def __init__(self, polygon: Polygon, transformation: Transformation, pen: QPen, brush: QBrush):
-        self.__polygon = Polygon([
-            point.apply_modification(transformation.to_affine_matrix()) for point in polygon.points
-        ])
-
+class Texture:
+    def __init__(self, pen: QPen, brush: QBrush):
         self.__pen = pen
         self.__brush = brush
 
-    @property
-    def polygon(self) -> Polygon:
-        return self.__polygon
-
-    def draw(self, painter: QPainter, projection: Projection):
+    def draw(self, polygon: Polygon, painter: QPainter, projection: Projection):
         painter.setPen(self.__pen)
         connect_points([
-            projection(point) for point in self.__polygon.points
+            projection(point) for point in polygon.points
         ], painter, self.__brush)
 
 
-class SpruceImage(AbstractFigureImage):
-    CONE_BRUSH = QBrush(Qt.green)
-    CONE_PEN = QPen(Qt.black, 3)
-    LEG_BRUSH = QBrush(Qt.gray)
-    LEG_PEN = QPen(Qt.red, 3)
+class PolygonImage:
 
-    def __init__(self, spruce: Spruce, projection: Projection, transformation: Transformation):
-        super().__init__(projection)
-        self.__spruce = spruce
-        self.__transformation = transformation
+    def __init__(self, polygon: Polygon, texture: Texture):
+        self.__polygon_link = polygon
+        self.__texture = texture
+        self.__transformed_polygon: Polygon = None
+
+    def transform(self, transformation: Transformation):
+        self.__transformed_polygon = Polygon([
+            transformation(point) for point in self.__polygon_link.points
+        ])
 
     @property
-    def transformation(self) -> Transformation:
-        return self.__transformation
+    def polygon(self) -> Polygon:
+        return self.__transformed_polygon
+
+    def draw(self, painter: QPainter, projection: Projection):
+        self.__texture.draw(self.polygon, painter, projection)
+
+
+class SpruceImage(AbstractFigureImage):
+    CONE_TEXTURE = Texture(QPen(Qt.black, 3), QBrush(Qt.green))
+    LEG_TEXTURE = Texture(QPen(Qt.red, 3),  QBrush(Qt.gray))
+
+    def __init__(self, spruce: Spruce, projection: Projection, transformation: Transformation):
+        super().__init__(projection, transformation)
+        self.__spruce = spruce
+
+        self.__polygons_images = [
+            PolygonImage(polygon, self.CONE_TEXTURE)
+            for polygon in self.__spruce.cone.polygons
+        ] + [
+            PolygonImage(polygon, self.LEG_TEXTURE)
+            for polygon in self.__spruce.leg.polygons
+        ]
 
     @property
     def figure(self) -> AbstractFigure:
         return self.__spruce
 
     def draw(self, painter: QPainter):
-        polygon_images = [
-            PolygonImage(polygon, self.__transformation, self.CONE_PEN, self.CONE_BRUSH)
-            for polygon in self.__spruce.cone.polygons
-        ] + [
-            PolygonImage(polygon, self.__transformation, self.LEG_PEN, self.LEG_BRUSH)
-            for polygon in self.__spruce.leg.polygons
-        ]
+        # Обновление положения образов многоугольников
+        for polygon_image in self.__polygons_images:
+            polygon_image.transform(self.transformation)
 
-        for polygon_image in sorted(polygon_images, key=lambda p: -p.polygon.center[self.projection.axle]):
+        # Сортировка образов по глубине
+        self.__polygons_images.sort(key=lambda p: -p.polygon.center[self.projection.axle])
+
+        # Отрисовка образов
+        for polygon_image in self.__polygons_images:
             polygon_image.draw(painter, self.projection)

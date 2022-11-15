@@ -6,6 +6,7 @@ from PyQt5.QtGui import QPen, QPainter
 from PyQt5.QtWidgets import QWidget
 
 from graphics.figure import AbstractFigure
+from graphics.types import Point3D
 from graphics_qt.images import connect_points
 from graphics_qt.images import AbstractFigureImage
 
@@ -48,12 +49,14 @@ class FigureProjectionView(AbstractViewWidget):
     def __init__(self,
                  figure: AbstractFigure,
                  projection: Projection,
+                 transformation: Optional[Transformation] = None,
                  show_axis: Optional[Tuple[bool, bool]] = (True, True),
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.__figure = figure
         self.__projection = projection
+        self.__transformation = transformation
         self.__painter = QPainter()
         self.__show_axis = show_axis
 
@@ -65,10 +68,6 @@ class FigureProjectionView(AbstractViewWidget):
     def projection(self, value: Projection):
         self.__projection = value
         self.repaint()
-
-    @property
-    def _transformation(self) -> Transformation:
-        return self.__projection.transformation
 
     def paintEvent(self, event) -> None:
         self.__painter.begin(self)
@@ -83,14 +82,25 @@ class FigureProjectionView(AbstractViewWidget):
 
         self.__painter.end()
 
+    @property
+    def _transformation(self) -> Transformation:
+        return self.__transformation
+
     def __draw_figure_with_projection(self) -> None:
         """
         Отрисовывает трехмерную фигуру на плоскости с учетом проекции.
         """
+        def proxy_point(point: Point3D):
+            if self._transformation is None:
+                return point
+            else:
+                return self._transformation(point)
 
         for polygon in self.__figure.polygons:
+
             connect_points([
-                self.__projection(point) for point in polygon.points
+                self.__projection(proxy_point(point))
+                for point in polygon.points
             ], self.__painter)
 
     def __draw_working_space(self, event):
@@ -117,6 +127,8 @@ class FigureProjectionView(AbstractViewWidget):
 
 
 class FigureImageView(AbstractViewWidget):
+    """Виджет отрисовывающий образ фигуры"""
+
     def __init__(self, image: AbstractFigureImage, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__image = image

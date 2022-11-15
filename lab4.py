@@ -9,9 +9,8 @@ from PyQt5.QtWidgets import (
 )
 
 from figures import Spruce
-from graphics import affine
-from graphics.types import Point3D
 from graphics.transformation import Transformation
+from graphics.types import Point3D
 from widgets.FigureProjectionsContainer import FigureProjectionsContainer, ProjectionType
 
 

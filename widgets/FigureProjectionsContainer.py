@@ -24,7 +24,6 @@ class FigureProjectionsContainer(QWidget):
             transformaion: Transformation = Transformation(0, 0, 1),
             *args, **kwargs
     ):
-
         super().__init__(*args, **kwargs)
 
         self.__projections: Dict[ProjectionType, Projection] = {
@@ -39,7 +38,7 @@ class FigureProjectionsContainer(QWidget):
             FigureProjectionView(figure, OrthographicProjection('x')),
             FigureProjectionView(figure, OrthographicProjection('y')),
             FigureProjectionView(figure, self.__projections[self.__current_projection_type],
-                                 show_axis=(False, False)),
+                                 transformaion, show_axis=(False, False), ),
         ]
 
         self.main_view.repaint()
