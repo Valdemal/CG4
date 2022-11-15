@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
 
 from figures import Spruce
 from graphics.types import Point3D
-from graphics_qt.images import FigureFrameworkImage
+from graphics_qt.images import FigureFrameworkImage, SpruceImage
 from graphics_qt.projections import CentralProjection
 from graphics.transformation import Transformation
 from widgets.views import FigureImageView
@@ -21,9 +21,14 @@ class MainWidget(QWidget):
         self.setWindowTitle(title)
         self.setMinimumSize(min_width, min_height)
 
-        image = FigureFrameworkImage(
-            figure=Spruce(Point3D(0, 0, 0), self.width() / 3, self.width() / 6, 3),
-            projection=CentralProjection('z', 400, Transformation(45, 45, 1)),
+        # image = FigureFrameworkImage(
+        #     figure=Spruce(Point3D(0, 0, 0), self.width() / 3, self.width() / 6, 3),
+        #     projection=CentralProjection('z', 400, Transformation(45, 45, 1)),
+        # )
+
+        image = SpruceImage(
+            Spruce(Point3D(0, 0, 0), self.width() / 3, self.width() / 6, 3),
+            CentralProjection('z', 400, Transformation(45, 45, 1))
         )
 
         self.__image_view = FigureImageView(image, parent=self)

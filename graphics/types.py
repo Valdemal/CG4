@@ -4,8 +4,9 @@
 
 from dataclasses import dataclass
 from math import sqrt
-from typing import List
+from typing import List, Literal
 
+Axle = Literal['x', 'y', 'z']
 
 @dataclass
 class Point3D:
@@ -28,6 +29,20 @@ class Point3D:
     def coords(self) -> tuple:
         return self.x, self.y, self.z
 
+    def copy(self) -> 'Point3D':
+        return Point3D(self.x, self.y, self.z)
+
+    def __getitem__(self, axle: Axle) -> float:
+        match axle:
+            case 'x':
+                return self.x
+            case 'y':
+                return self.y
+            case 'z':
+                return self.z
+            case _:
+                raise IndexError(f'No ax named {axle}!')
+
     def __add__(self, other: 'Point3D'):
         return Point3D(self.x + other.x, self.y + other.y, self.z + other.z)
 
@@ -36,9 +51,6 @@ class Point3D:
 
     def __neg__(self) -> 'Point3D':
         return Point3D(-self.x, -self.y, -self.z)
-
-    def copy(self) -> 'Point3D':
-        return Point3D(self.x, self.y, self.z)
 
     def __str__(self):
         return f"({self.x}, {self.y}, {self.z})"

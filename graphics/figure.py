@@ -5,6 +5,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+from graphics.geometry_functions import avg
 from graphics.types import Point3D
 
 
@@ -15,6 +16,10 @@ class Polygon:
     @property
     def points(self) -> List[Point3D]:
         return self.__points
+
+    @property
+    def center(self) -> Point3D:
+        return avg(self.points)
 
     def copy(self) -> 'Polygon':
         return Polygon([point.copy() for point in self.points])

@@ -90,7 +90,7 @@ class FigureProjectionView(AbstractViewWidget):
 
         for polygon in self.__figure.polygons:
             connect_points([
-                self.__projection(point, self.__figure.center) for point in polygon.points
+                self.__projection(point) for point in polygon.points
             ], self.__painter)
 
     def __draw_working_space(self, event):

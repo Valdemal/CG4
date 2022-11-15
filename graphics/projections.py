@@ -2,9 +2,7 @@
 Модуль содержащий функции проектирования.
 """
 
-from typing import Literal
-
-from graphics.types import Matrix
+from graphics.types import Matrix, Axle
 
 
 def _get_orthographic_matrix(i: int) -> Matrix:
@@ -13,7 +11,7 @@ def _get_orthographic_matrix(i: int) -> Matrix:
     return matrix
 
 
-def orthographic(axle: Literal['x', 'y', 'z']) -> Matrix:
+def orthographic(axle: Axle) -> Matrix:
     """
     :param axle: Плоскость проекции.
     :return: Матрица ортографической проекции.
@@ -23,7 +21,7 @@ def orthographic(axle: Literal['x', 'y', 'z']) -> Matrix:
     return _get_orthographic_matrix(i)
 
 
-def central(axle: Literal['x', 'y', 'z'], distance_from_screen: float) -> Matrix:
+def central(axle: Axle, distance_from_screen: float) -> Matrix:
     i = 'xyz'.index(axle)
 
     matrix = _get_orthographic_matrix(i)

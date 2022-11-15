@@ -3,6 +3,7 @@ from math import pi, cos, sin
 from typing import List
 
 from graphics.figure import BaseFigure, Polygon, AbstractFigure
+from graphics.geometry_functions import avg
 from graphics.types import Point3D
 
 
@@ -123,9 +124,6 @@ class Parrallelepiped(AbstractFigure):
 
     @property
     def center(self) -> Point3D:
-        def avg(a):
-            return functools.reduce(lambda x, y: x + y, a)
-
         return avg(self.__top.points + self.__bottom.points)
 
     @property
@@ -183,9 +181,18 @@ class Spruce(AbstractFigure):
         self.__leg = Leg(leg_center, leg_height)
 
     @property
+    def cone(self) -> Cone:
+        return self.__cone
+
+    @property
+    def leg(self) -> Leg:
+        return self.__leg
+
+    @property
     def center(self) -> Point3D:
         return self.__center
 
     @property
     def polygons(self) -> List[Polygon]:
         return self.__cone.polygons + self.__leg.polygons
+

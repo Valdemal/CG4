@@ -2,12 +2,12 @@
 Модуль реализующий проекцию трехмерных точек пакет graphics в двумерные точки QPointF
 """
 from abc import ABC, abstractmethod
-from typing import Literal, Optional
+from typing import Optional
 
 from PyQt5.QtCore import QPointF
 
 from graphics import projections
-from graphics.types import Point3D, Matrix
+from graphics.types import Point3D, Matrix, Axle
 from graphics.transformation import Transformation
 
 
@@ -19,14 +19,14 @@ class Projection(ABC):
 
     def __init__(self,
                  projection_matrix: Matrix,
-                 axle: Literal['x', 'y', 'z'],
+                 axle: Axle,
                  transformation: Optional[Transformation] = None):
         self._projection_matrix = projection_matrix
         self.__transformation = transformation
         self._axle = axle
 
     @abstractmethod
-    def __call__(self, point: Point3D, center: Point3D) -> QPointF:
+    def __call__(self, point: Point3D) -> QPointF:
         """
         Метод выполняющий проекцию трехмерной точки Point3D в двумерную QPointF
         :param point: точка в трехмерном пространстве
@@ -36,16 +36,20 @@ class Projection(ABC):
         pass
 
     @property
+    def axle(self) -> Axle:
+        return self._axle
+
+    @property
     def transformation(self) -> Transformation:
         return self.__transformation
 
 
 class OrthographicProjection(Projection):
 
-    def __init__(self, axle: Literal['x', 'y', 'z'], transformation: Optional[Transformation] = None):
+    def __init__(self, axle: Axle, transformation: Optional[Transformation] = None):
         super().__init__(projections.orthographic(axle), axle, transformation)
 
-    def __call__(self, point: Point3D, center: Point3D) -> QPointF:
+    def __call__(self, point: Point3D) -> QPointF:
 
         matrix = self._projection_matrix
         if self.transformation is not None:
@@ -53,7 +57,7 @@ class OrthographicProjection(Projection):
 
         transformed_point = point.apply_modification(matrix)
 
-        match self._axle:
+        match self.axle:
             case 'x':
                 return QPointF(transformed_point.z, -transformed_point.y)
             case 'y':
@@ -67,7 +71,7 @@ class OrthographicProjection(Projection):
 
 
 class CentralProjection(OrthographicProjection):
-    def __init__(self, ax: Literal['x', 'y', 'z'],
+    def __init__(self, ax: Axle,
                  distance_from_screen: float,
                  transformation: Optional[Transformation] = None,
                  ):

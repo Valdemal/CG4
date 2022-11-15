@@ -5,7 +5,7 @@
 from math import sin, radians, cos
 from typing import Literal, List
 
-from graphics.types import Matrix
+from graphics.types import Matrix, Axle
 
 
 def transfer(delta_x: float = 1, delta_y: float = 1, delta_z: float = 1) -> Matrix:
@@ -42,14 +42,13 @@ def scaling(kx: float = 1, ky: float = 1, kz: float = 1) -> Matrix:
     ])
 
 
-def reflection(axis: str) -> Matrix:
+def reflection(axis: List[Axle]) -> Matrix:
     """
     Возвращает матрицу отражения.
 
-    :param axis: строка, храняшая оси отражения в любом порядке. (например 'x', 'yx', 'xyz')
+    :param axis: список осей, хранящий оси отражения в любом порядке.
+    например ['x'], ['y', 'x'], ['x','y','z']
     """
-
-    axis = axis.lower()
 
     def get_reflect_value(a: str):
         return -1 if axis.find(a) != -1 else 1
@@ -62,12 +61,12 @@ def reflection(axis: str) -> Matrix:
     ])
 
 
-def rotate(angle_in_degrees: float, axis: Literal['x', 'y', 'z']) -> Matrix:
+def rotate(angle_in_degrees: float, axle: Axle) -> Matrix:
     """
     Возвращает матрицу поворота
 
     :param angle_in_degrees: угол поворота
-    :param axis: ось поворота
+    :param axle: ось поворота
     """
 
     def extend_matrix(arr: List[List[float]], i: int):
@@ -87,7 +86,7 @@ def rotate(angle_in_degrees: float, axis: Literal['x', 'y', 'z']) -> Matrix:
         [sin_value, cos_value]
     ]
 
-    help_i = 'xyz'.index(axis)
+    help_i = 'xyz'.index(axle)
 
     extend_matrix(a, help_i)
 
