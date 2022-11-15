@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from graphics.geometry_functions import avg
+from graphics.transformation import Transformation
 from graphics.types import Point3D
 
 
@@ -39,8 +40,9 @@ class AbstractFigure(ABC):
 
 class BaseFigure(AbstractFigure):
 
-    def __init__(self, polygons: List[Polygon]):
+    def __init__(self, polygons: List[Polygon], center: Point3D):
         self.__polygons = polygons
+        self.__center = center
 
     @property
     def polygons(self) -> List[Polygon]:
@@ -51,6 +53,5 @@ class BaseFigure(AbstractFigure):
         self.__polygons = value
 
     @property
-    @abstractmethod
     def center(self) -> Point3D:
-        pass
+        return self.__center

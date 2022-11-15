@@ -1,4 +1,3 @@
-import functools
 from math import pi, cos, sin
 from typing import List
 
@@ -33,7 +32,7 @@ class Cone(BaseFigure):
 
         high = Point3D(base_center.x, base_center.y + height, base_center.z)
 
-        self.__center = ((high.x - base_center.x) / 2, (high.y - base_center.y) / 2, (high.y - base_center.y) / 2,)
+        center = ((high.x - base_center.x) / 2, (high.y - base_center.y) / 2, (high.y - base_center.y) / 2,)
 
         super().__init__(
             # Треугольники основания
@@ -43,7 +42,8 @@ class Cone(BaseFigure):
             levels_polygons +
 
             # Треугольники верхушки
-            self._split_polygon_to_triangles_by_point(current_level, high)
+            self._split_polygon_to_triangles_by_point(current_level, high),
+            center
         )
 
     @property
@@ -127,19 +127,33 @@ class Parrallelepiped(AbstractFigure):
         return avg(self.__top.points + self.__bottom.points)
 
     @property
-    def polygons(self) -> List[Polygon]:
+    def top(self) -> Polygon:
+        return self.__top
+
+    @property
+    def bottom(self) -> Polygon:
+        return self.__bottom
+
+    @property
+    def side_faces(self) -> List[Polygon]:
         other = []
 
         for i in range(3):
-            other.append(Polygon([self.__top.points[i], self.__bottom.points[i],
-                                  self.__bottom.points[i + 1], self.__top.points[i + 1]
-                                  ]))
+            other.append(Polygon([
+                self.top.points[i], self.bottom.points[i],
+                self.bottom.points[i + 1], self.top.points[i + 1]
+            ]))
 
-        other.append(Polygon([self.__top.points[-1], self.__bottom.points[-1],
-                              self.__bottom.points[0], self.__top.points[0]
-                              ]))
+        other.append(Polygon([
+            self.top.points[-1], self.bottom.points[-1],
+            self.bottom.points[0], self.top.points[0]
+        ]))
 
-        return [self.__bottom, self.__top] + other
+        return other
+
+    @property
+    def polygons(self) -> List[Polygon]:
+        return [self.bottom, self.top] + self.side_faces
 
 
 class Leg(AbstractFigure):
@@ -148,25 +162,69 @@ class Leg(AbstractFigure):
         h_3 = height / 3
         h_12 = height / 12
 
-        self.__first = Parrallelepiped(center, dx=height, dz=height, height=h_6)
+        parrallelepipeds = [
+            Parrallelepiped(center, dx=height, dz=height, height=h_6),
+            Parrallelepiped(
+                Point3D(center.x, center.y + h_6, center.z),
+                dx=h_3, dz=h_3, height=height / 2
+            ),
+            Parrallelepiped(
+                Point3D(center.x, center.y + 2 * height / 3, center.z),
+                dx=h_12, dz=h_12, height=h_3
+            )
+        ]
 
-        self.__second = Parrallelepiped(
-            Point3D(center.x, center.y + h_6, center.z),
-            dx=h_3, dz=h_3, height=height / 2
-        )
-
-        self.__third = Parrallelepiped(
-            Point3D(center.x, center.y + 2 * height / 3, center.z),
-            dx=h_12, dz=h_12, height=h_3
-        )
+        self.__center = center
+        self.__levels = self.__create_levels(parrallelepipeds)
 
     @property
     def center(self) -> Point3D:
-        return self.__second.center
+        return self.__center
 
     @property
     def polygons(self) -> List[Polygon]:
-        return self.__first.polygons + self.__second.polygons + self.__third.polygons
+        result: List[Polygon] = []
+
+        for level in self.__levels:
+            for polygon in level.polygons:
+                result.append(polygon)
+
+        return result
+
+    @staticmethod
+    def __create_levels(parrallelepipeds: List[Parrallelepiped]) -> List[BaseFigure]:
+        levels = []
+
+        for i in range(len(parrallelepipeds) - 1):
+            level_top = Leg.__create_level_top(parrallelepipeds[i].top, parrallelepipeds[i + 1].bottom)
+            level_polygons = [parrallelepipeds[i].bottom, *parrallelepipeds[i].side_faces, *level_top]
+            level_center = avg([parrallelepipeds[i].top.center, parrallelepipeds[i + 1].bottom.center])
+
+            levels.append(BaseFigure(level_polygons, level_center))
+
+        last_level_center = avg([parrallelepipeds[-1].bottom.center, parrallelepipeds[-1].top.center])
+        levels.append(BaseFigure([
+            parrallelepipeds[-1].bottom, *parrallelepipeds[-1].side_faces
+        ], last_level_center))
+
+        return levels
+
+    @staticmethod
+    def __create_level_top(top: Polygon, bottom: Polygon) -> List[Polygon]:
+        polygons = []
+
+        for i in range(len(top.points) - 1):
+            polygons.append(Polygon([
+                top.points[i], bottom.points[i],
+                bottom.points[i + 1], top.points[i + 1]
+            ]))
+
+        polygons.append(Polygon([
+            top.points[-1], bottom.points[-1],
+            bottom.points[0], top.points[0]
+        ]))
+
+        return polygons
 
 
 class Spruce(AbstractFigure):
@@ -195,4 +253,3 @@ class Spruce(AbstractFigure):
     @property
     def polygons(self) -> List[Polygon]:
         return self.__cone.polygons + self.__leg.polygons
-

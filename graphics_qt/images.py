@@ -118,8 +118,9 @@ class SpruceImage(AbstractFigureImage):
             """
             a
             """
+            result = sorted(polygons, key=lambda polygon: -polygon.center[axle])
 
-            return sorted(polygons, key=lambda polygon: polygon.center[axle])
+            return result
 
         # Отрисовка конуса
         painter.setPen(self.CONE_PEN)

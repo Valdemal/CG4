@@ -3,7 +3,7 @@
 """
 
 from math import sin, radians, cos
-from typing import Literal, List
+from typing import List
 
 from graphics.types import Matrix, Axle
 
