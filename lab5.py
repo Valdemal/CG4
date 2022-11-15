@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout, )
 
 from figures import Spruce
+from graphics import affine
 from graphics.types import Point3D
 from graphics_qt.images import FigureFrameworkImage, SpruceImage
 from graphics_qt.projections import CentralProjection
@@ -23,7 +24,8 @@ class MainWidget(QWidget):
 
         self.__figure = Spruce(Point3D(0, 0, 0), self.width() / 3, self.width() / 6, 3)
 
-        image = SpruceImage(self.__figure, CentralProjection('z', 400))
+        image = SpruceImage(self.__figure, CentralProjection('z', 400), Transformation(45, 45, 1))
+
         self.__image_view = FigureImageView(image, parent=self)
 
         self.__init_layout()

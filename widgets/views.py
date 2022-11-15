@@ -133,4 +133,4 @@ class FigureImageView(AbstractViewWidget):
 
     @property
     def _transformation(self) -> Transformation:
-        return self.__image.projection.transformation
+        return self.__image.transformation

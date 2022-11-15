@@ -6,8 +6,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from graphics.geometry_functions import avg
-from graphics.transformation import Transformation
-from graphics.types import Point3D
+from graphics.types import Point3D, Matrix
 
 
 class Polygon:
@@ -17,6 +16,10 @@ class Polygon:
     @property
     def points(self) -> List[Point3D]:
         return self.__points
+
+    def apply_affine(self, affine_matrix: Matrix):
+        for i in range(len(self.__points)):
+            self.__points[i] = self.__points[i].apply_modification(affine_matrix)
 
     @property
     def center(self) -> Point3D:
@@ -36,6 +39,10 @@ class AbstractFigure(ABC):
     @abstractmethod
     def center(self) -> Point3D:
         pass
+
+    def apply_affine(self, affine_matrix: Matrix):
+        for polygon in self.polygons:
+            polygon.apply_affine(affine_matrix)
 
 
 class BaseFigure(AbstractFigure):
