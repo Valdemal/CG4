@@ -46,6 +46,9 @@ class Point3D:
     def __add__(self, other: 'Point3D'):
         return Point3D(self.x + other.x, self.y + other.y, self.z + other.z)
 
+    def __sub__(self, other: 'Point3D'):
+        return Point3D(self.x - other.x, self.y - other.y, self.z - other.z)
+
     def __truediv__(self, num: float):
         return Point3D(self.x / num, self.y / num, self.z / num)
 

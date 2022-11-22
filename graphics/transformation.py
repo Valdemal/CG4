@@ -1,6 +1,6 @@
 from graphics import affine
 from graphics.types import Matrix, Point3D
-from .geometry_functions import increase_angle
+from .help_functions import increase_angle
 
 
 class Transformation:

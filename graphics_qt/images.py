@@ -6,10 +6,13 @@ from abc import ABC, abstractmethod
 from typing import Optional, List
 
 from PyQt5.QtCore import QPointF, Qt
-from PyQt5.QtGui import QPainter, QPen, QBrush, QPainterPath
+from PyQt5.QtGui import QPainter, QPen, QBrush, QPainterPath, QColor
 
 from figures import Spruce
-from graphics.figure import AbstractFigure, Polygon
+
+from graphics.figures import AbstractFigure
+from graphics.help_functions import cyclic_pare_iter
+from graphics.polygons import BasePolygon
 from graphics.transformation import Transformation
 from graphics_qt.projections import Projection
 
@@ -27,12 +30,9 @@ def connect_points(points: List[QPointF],
     path = QPainterPath()
     path.moveTo(points[0])
 
-    for i in range(1, len(points)):
-        path.lineTo(points[i])
-        painter.drawLine(points[i - 1], points[i])
-
-    painter.drawLine(points[len(points) - 1], points[0])
-    path.lineTo(points[0])
+    for p1, p2 in cyclic_pare_iter(points):
+        path.lineTo(p2)
+        painter.drawLine(p1, p2)
 
     if brush is not None:
         painter.fillPath(path, brush)
@@ -88,10 +88,7 @@ class FigureFrameworkImage(AbstractFigureImage):
 
     def draw(self, painter: QPainter):
         for polygon in self.__figure.polygons:
-            connect_points([
-                self.projection(point)
-                for point in polygon.points
-            ], painter)
+            connect_points([self.projection(point) for point in polygon], painter)
 
 
 class Texture:
@@ -99,27 +96,27 @@ class Texture:
         self.__pen = pen
         self.__brush = brush
 
-    def draw(self, polygon: Polygon, painter: QPainter, projection: Projection):
+    def draw(self, polygon: BasePolygon, painter: QPainter, projection: Projection):
         painter.setPen(self.__pen)
         connect_points([
-            projection(point) for point in polygon.points
+            projection(point) for point in polygon
         ], painter, self.__brush)
 
 
 class PolygonImage:
 
-    def __init__(self, polygon: Polygon, texture: Texture):
+    def __init__(self, polygon: BasePolygon, texture: Texture):
         self.__polygon_link = polygon
         self.__texture = texture
-        self.__transformed_polygon: Polygon = None
+        self.__transformed_polygon: BasePolygon = None
 
     def transform(self, transformation: Transformation):
-        self.__transformed_polygon = Polygon([
-            transformation(point) for point in self.__polygon_link.points
+        self.__transformed_polygon = BasePolygon([
+            transformation(point) for point in self.__polygon_link
         ])
 
     @property
-    def polygon(self) -> Polygon:
+    def polygon(self) -> BasePolygon:
         return self.__transformed_polygon
 
     def draw(self, painter: QPainter, projection: Projection):
@@ -127,20 +124,20 @@ class PolygonImage:
 
 
 class SpruceImage(AbstractFigureImage):
-    CONE_TEXTURE = Texture(QPen(Qt.black, 3), QBrush(Qt.green))
-    LEG_TEXTURE = Texture(QPen(Qt.red, 3),  QBrush(Qt.gray))
+    CONE_TEXTURE = Texture(QPen(Qt.black, 3), QBrush(QColor(0, 172, 0, 230)))
+    LEG_TEXTURE = Texture(QPen(Qt.red, 3), QBrush(QColor(101, 48, 12, 210)))
 
     def __init__(self, spruce: Spruce, projection: Projection, transformation: Transformation):
         super().__init__(projection, transformation)
         self.__spruce = spruce
 
         self.__polygons_images = [
-            PolygonImage(polygon, self.CONE_TEXTURE)
-            for polygon in self.__spruce.cone.polygons
-        ] + [
-            PolygonImage(polygon, self.LEG_TEXTURE)
-            for polygon in self.__spruce.leg.polygons
-        ]
+                                     PolygonImage(polygon, self.CONE_TEXTURE)
+                                     for polygon in self.__spruce.cone
+                                 ] + [
+                                     PolygonImage(polygon, self.LEG_TEXTURE)
+                                     for polygon in self.__spruce.leg
+                                 ]
 
     @property
     def figure(self) -> AbstractFigure:

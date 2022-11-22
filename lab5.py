@@ -1,5 +1,5 @@
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (
     QWidget, QApplication,
     QVBoxLayout, )
@@ -23,9 +23,14 @@ class MainWidget(QWidget):
 
         self.__figure = Spruce(Point3D(0, 0, 0), self.width() / 3, self.width() / 6, 3)
 
-        image = SpruceImage(self.__figure, CentralProjection('z', 400), Transformation(45, 45, 1))
+        image = SpruceImage(self.__figure, CentralProjection('z', 400), Transformation(-10, 45, 1))
 
         self.__image_view = FigureImageView(image, parent=self)
+
+        self.__is_animation_active = True
+        self.__timer = QTimer()
+        self.__timer.timeout.connect(self._animation)
+        self.__timer.start(30)
 
         self.__init_layout()
 
@@ -44,6 +49,12 @@ class MainWidget(QWidget):
                 self.__image_view.rotate_x(MainWidget.ROTATION_INCREACE)
             case Qt.Key_Down:
                 self.__image_view.rotate_x(-MainWidget.ROTATION_INCREACE)
+            case Qt.Key_S:
+                self.__is_animation_active = not self.__is_animation_active
+
+    def _animation(self):
+        if self.__is_animation_active:
+            self.__image_view.rotate_y(MainWidget.ROTATION_INCREACE)
 
     def __init_layout(self):
         layout = QVBoxLayout()

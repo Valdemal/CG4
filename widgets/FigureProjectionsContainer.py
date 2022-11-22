@@ -4,7 +4,7 @@ from typing import Dict
 
 from PyQt5.QtWidgets import QWidget, QGridLayout, QSizePolicy
 
-from graphics.figure import BaseFigure
+from graphics.figures import BaseFigure
 from graphics_qt.projections import OrthographicProjection, CentralProjection, Projection
 from graphics.transformation import Transformation
 from widgets.views import FigureProjectionView

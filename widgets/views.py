@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPen, QPainter
 from PyQt5.QtWidgets import QWidget
 
-from graphics.figure import AbstractFigure
+from graphics.figures import AbstractFigure
 from graphics.types import Point3D
 from graphics_qt.images import connect_points
 from graphics_qt.images import AbstractFigureImage
